@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;" />
+  <title>Phlux</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">φ</span>
+      <div>
+        <h1>Phlux</h1>
+        <p class="subtitle">One-click PHP version switcher</p>
+      </div>
+    </div>
+    <div class="active-pill" id="active-pill">
+      <span class="dot"></span>
+      <span id="active-label">Detecting…</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Library</h2>
+        <p>Pick a version to install or activate. Only one can be active at a time.</p>
+      </div>
+      <div class="version-grid" id="version-grid"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Detected on this system</h2>
+        <p>PHP binaries discovered outside of Phlux. Read-only — kept for reference.</p>
+      </div>
+      <ul class="system-list" id="system-list">
+        <li class="muted">Scanning…</li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer>
+    <span id="footer-status">Ready.</span>
+    <button class="link" id="open-data">Open data folder</button>
+  </footer>
+
+  <template id="version-card-template">
+    <article class="card" data-version="">
+      <header>
+        <h3 class="version"></h3>
+        <span class="badge"></span>
+      </header>
+      <p class="resolved muted"></p>
+      <div class="progress" hidden>
+        <div class="bar"></div>
+        <span class="progress-label"></span>
+      </div>
+      <div class="actions">
+        <button class="primary" data-action="install">Install</button>
+        <button class="secondary" data-action="activate" hidden>Activate</button>
+        <button class="ghost" data-action="uninstall" hidden>Remove</button>
+      </div>
+    </article>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
