@@ -35,8 +35,7 @@ function createWindow() {
 
   mainWindow.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
 
-  const isDev = !app.isPackaged;
-  if (isDev || process.env.PHLUX_DEVTOOLS === '1') {
+  if (process.env.PHLUX_DEVTOOLS === '1') {
     mainWindow.webContents.openDevTools({ mode: 'detach' });
   }
 

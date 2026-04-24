@@ -24,6 +24,18 @@ Download, install and activate any PHP version from a clean desktop UI &mdash; n
 > - **Windows 10 / 11 (x64)** &mdash; fully supported. This is the V1 target and the only platform we actively test against.
 > - **macOS / Linux** &mdash; the discovery, switcher and shim plumbing is written but the default download sources are empty and installation has **not** been validated end-to-end. Expect rough edges until V2. See [Supported platforms](#supported-platforms) for details.
 
+## Download
+
+Grab the latest Windows installer from the [Releases page](https://github.com/<your-handle>/phlux/releases/latest):
+
+| Platform | File | Direct link |
+| --- | --- | --- |
+| **Windows (x64)** | `Phlux-Setup-<version>.exe` | [Download latest](https://github.com/<your-handle>/phlux/releases/latest/download/Phlux-Setup.exe) |
+| macOS | _planned for V2_ | &mdash; |
+| Linux | _planned for V2_ | &mdash; |
+
+The installer is currently **unsigned**, so Windows SmartScreen may warn on first run. Click _More info &rarr; Run anyway_ &mdash; or build from source yourself (see below). A code-signing certificate is on the [Roadmap](#roadmap).
+
 ## Why Phlux
 
 Juggling PHP versions is a recurring pain for developers who maintain legacy codebases alongside cutting-edge projects. Existing solutions each have friction:
@@ -69,15 +81,52 @@ npm install
 npm run dev
 ```
 
-`npm run dev` launches the app with `electronmon`, auto-reloading on file changes. DevTools opens in a detached window for inspection.
-
-### Produce a Windows installer
+`npm run dev` launches the app with `electronmon`, auto-reloading on file changes. To also open DevTools in a detached window, launch with an environment variable:
 
 ```bash
-npm run build:win
+# Windows PowerShell
+$env:PHLUX_DEVTOOLS=1; npm run dev
+
+# macOS / Linux
+PHLUX_DEVTOOLS=1 npm run dev
 ```
 
-The signed installer lands in `dist/`.
+### Regenerate the app icon
+
+If you change `assets/source.png`, rebuild every size/format with a single command:
+
+```bash
+npm run icons
+```
+
+This writes `icon.ico`, `icon.icns` and a `16x16`&ndash;`1024x1024` PNG ladder into `assets/icons/`.
+
+### Build installers
+
+Phlux uses [electron-builder](https://www.electron.build/) for packaging. Output lands in `dist/`.
+
+| Target | Command | Output file |
+| --- | --- | --- |
+| Windows NSIS | `npm run build:win` | `dist/Phlux Setup <version>.exe` |
+| macOS DMG | `npm run build:mac` | `dist/Phlux-<version>.dmg` |
+| Linux AppImage | `npm run build:linux` | `dist/Phlux-<version>.AppImage` |
+| All three | `npm run build` | all of the above |
+
+**Windows build notes**
+
+- The first build downloads the electron framework (~200&nbsp;MB). Subsequent builds are cached under `%LOCALAPPDATA%\electron-builder\Cache`.
+- The resulting `.exe` is currently **unsigned**. Users will see a SmartScreen warning until the project adopts [Azure Trusted Signing](https://learn.microsoft.com/azure/trusted-signing/) (see [Roadmap](#roadmap)).
+- To build from Windows you need no extra dependencies. On macOS / Linux, cross-building to Windows requires `wine`.
+- electron-builder extracts a `winCodeSign` cache that contains symlinks. Windows rejects symlink creation unless you either **(a)** run `npm run build:win` from an elevated PowerShell (right-click &rarr; _Run as administrator_), or **(b)** enable _Developer Mode_ once in **Settings &rarr; Privacy &amp; security &rarr; For developers**. Option (b) is a one-time toggle and is the recommended fix.
+
+**macOS build notes**
+
+- Cross-building from Windows is **not** supported by Apple's toolchain; build macOS targets on a Mac (Apple Silicon or Intel).
+- For a distributable DMG you need an Apple Developer ID certificate and notarisation. Un-notarised builds will still open after a right-click &rarr; _Open_ dance.
+
+**Linux build notes**
+
+- AppImage works out of the box. For `.deb` / `.rpm` targets, add them to the `linux.target` array in `package.json` and install the corresponding packagers (`dpkg`, `rpm-build`).
 
 ## How it works
 
