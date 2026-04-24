@@ -11,11 +11,15 @@ const DEFAULT_CONFIG = {
 
 const DEFAULT_SOURCES = {
   win32: {
+    '8.5': 'https://windows.php.net/downloads/releases/php-8.5.0-nts-Win32-vs17-x64.zip',
     '8.4': 'https://windows.php.net/downloads/releases/php-8.4.3-nts-Win32-vs17-x64.zip',
     '8.3': 'https://windows.php.net/downloads/releases/php-8.3.16-nts-Win32-vs16-x64.zip',
     '8.2': 'https://windows.php.net/downloads/releases/php-8.2.27-nts-Win32-vs16-x64.zip',
     '8.1': 'https://windows.php.net/downloads/releases/archives/php-8.1.31-nts-Win32-vs16-x64.zip',
+    '8.0': 'https://windows.php.net/downloads/releases/archives/php-8.0.30-nts-Win32-vs16-x64.zip',
     '7.4': 'https://windows.php.net/downloads/releases/archives/php-7.4.33-nts-Win32-vc15-x64.zip',
+    '7.3': 'https://windows.php.net/downloads/releases/archives/php-7.3.33-nts-Win32-VC15-x64.zip',
+    '7.2': 'https://windows.php.net/downloads/releases/archives/php-7.2.34-nts-Win32-VC15-x64.zip',
   },
   darwin: {},
   linux: {},
@@ -60,7 +64,20 @@ async function loadSources() {
     await writeJson(file, DEFAULT_SOURCES);
     return DEFAULT_SOURCES;
   }
-  return await readJson(file, DEFAULT_SOURCES);
+  const existing = await readJson(file, DEFAULT_SOURCES);
+  const merged = JSON.parse(JSON.stringify(existing));
+  let changed = false;
+  for (const platform of Object.keys(DEFAULT_SOURCES)) {
+    if (!merged[platform]) { merged[platform] = {}; changed = true; }
+    for (const [ver, url] of Object.entries(DEFAULT_SOURCES[platform])) {
+      if (!merged[platform][ver]) {
+        merged[platform][ver] = url;
+        changed = true;
+      }
+    }
+  }
+  if (changed) await writeJson(file, merged);
+  return merged;
 }
 
 module.exports = {

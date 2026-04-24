@@ -23,6 +23,7 @@ const el = {
 
 let state = null;
 const progressByVersion = new Map();
+const activatingVersions = new Set();
 
 function setStatus(text) {
   el.footerStatus.textContent = text;
@@ -131,22 +132,36 @@ function renderCard(version) {
     btnInstall.dataset.action = 'use-system';
   }
 
+  if (activatingVersions.has(version)) {
+    btnInstall.hidden = true;
+    btnUninstall.hidden = true;
+    btnActivate.hidden = false;
+    btnActivate.innerHTML = `<span class="spinner"></span>Activating…`;
+    btnActivate.classList.add('loading');
+    btnActivate.disabled = true;
+  }
+
   const progress = progressByVersion.get(version);
   if (progress) {
     const bar = frag.querySelector('.progress');
     bar.hidden = false;
     bar.style.setProperty('--pct', `${progress.percent || 0}%`);
-    frag.querySelector('.progress-label').textContent =
+    const stageLabel =
       progress.stage === 'resolve'
-        ? 'Finding latest patch…'
+        ? 'Resolving…'
         : progress.stage === 'download'
-          ? `Downloading… ${progress.percent || 0}%`
+          ? `Downloading ${progress.percent || 0}%`
           : progress.stage === 'extract'
             ? 'Extracting…'
             : 'Finalizing…';
+    frag.querySelector('.progress-label').textContent = stageLabel;
+
+    btnInstall.hidden = false;
+    btnInstall.innerHTML = `<span class="spinner"></span>${stageLabel}`;
+    btnInstall.classList.add('loading');
     btnInstall.disabled = true;
-    btnActivate.disabled = true;
-    btnUninstall.disabled = true;
+    btnActivate.hidden = true;
+    btnUninstall.hidden = true;
   }
 
   btnInstall.addEventListener('click', () => {
@@ -216,33 +231,45 @@ async function installVersion(version) {
 }
 
 async function useSystem(version, systemMatch) {
+  activatingVersions.add(version);
   setStatus(`Linking ${systemMatch.source} PHP ${systemMatch.version}…`);
-  const res = await phluxApi.linkExisting({
-    majorMinor: version,
-    path: systemMatch.path,
-    source: systemMatch.source,
-  });
-  if (!res.ok) {
-    setStatus(`Link failed: ${res.error}`);
-    return;
-  }
-  setStatus(`Linked. Activating…`);
-  const act = await phluxApi.activate(version);
-  if (!act.ok) {
-    setStatus(`Activation failed: ${act.error}`);
-  } else {
-    setStatus(`PHP ${version} is active via ${systemMatch.source}. Open a new terminal.`);
+  renderVersions();
+  try {
+    const res = await phluxApi.linkExisting({
+      majorMinor: version,
+      path: systemMatch.path,
+      source: systemMatch.source,
+    });
+    if (!res.ok) {
+      setStatus(`Link failed: ${res.error}`);
+      return;
+    }
+    setStatus(`Linked. Activating…`);
+    const act = await phluxApi.activate(version);
+    if (!act.ok) {
+      setStatus(`Activation failed: ${act.error}`);
+    } else {
+      setStatus(`PHP ${version} is active via ${systemMatch.source}. Open a new terminal.`);
+    }
+  } finally {
+    activatingVersions.delete(version);
   }
   await refresh();
 }
 
 async function activateVersion(version) {
+  activatingVersions.add(version);
   setStatus(`Activating PHP ${version}… (you may see a UAC prompt on first activation)`);
-  const res = await phluxApi.activate(version);
-  if (!res.ok) {
-    setStatus(`Activation failed: ${res.error}`);
-  } else {
-    setStatus(`PHP ${version} is now active. Open a new terminal to use it.`);
+  renderVersions();
+  try {
+    const res = await phluxApi.activate(version);
+    if (!res.ok) {
+      setStatus(`Activation failed: ${res.error}`);
+    } else {
+      setStatus(`PHP ${version} is now active. Open a new terminal to use it.`);
+    }
+  } finally {
+    activatingVersions.delete(version);
   }
   await refresh();
 }
