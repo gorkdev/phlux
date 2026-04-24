@@ -2,12 +2,14 @@
 
 # Phlux
 
-**One-click PHP version switcher for Windows, macOS and Linux.**
+**One-click PHP version switcher for Windows.**
+macOS and Linux support is scaffolded but not production-ready yet.
 
-Download, install and activate any PHP version from a clean desktop UI &mdash; no more editing `PATH` by hand, no `UAC` hunting in `sysdm.cpl`, no broken XAMPP setups.
+Download, install and activate any PHP version from a clean desktop UI &mdash; no more editing `PATH` by hand, no UAC hunting in `sysdm.cpl`, no broken XAMPP setups.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)](#supported-platforms)
+[![Platform](https://img.shields.io/badge/platform-Windows-0078D6.svg?logo=windows&logoColor=white)](#supported-platforms)
+[![macOS / Linux](https://img.shields.io/badge/macOS%20%7C%20Linux-experimental-orange.svg)](#supported-platforms)
 [![Electron](https://img.shields.io/badge/Electron-41-47848F.svg?logo=electron&logoColor=white)](https://www.electronjs.org/)
 [![Node](https://img.shields.io/badge/Node-20%2B-339933.svg?logo=node.js&logoColor=white)](https://nodejs.org/)
 
@@ -16,6 +18,11 @@ Download, install and activate any PHP version from a clean desktop UI &mdash; n
 </div>
 
 ---
+
+> **Platform status**
+>
+> - **Windows 10 / 11 (x64)** &mdash; fully supported. This is the V1 target and the only platform we actively test against.
+> - **macOS / Linux** &mdash; the discovery, switcher and shim plumbing is written but the default download sources are empty and installation has **not** been validated end-to-end. Expect rough edges until V2. See [Supported platforms](#supported-platforms) for details.
 
 ## Why Phlux
 
@@ -49,8 +56,9 @@ Phlux treats PHP version management as a first-class desktop experience. One lis
 
 ### Prerequisites
 
-- **Windows 10 / 11** for the supported V1 build (macOS and Linux are in progress).
+- **Windows 10 / 11 (x64)** &mdash; the only fully supported platform for V1.
 - **Node.js 20 LTS** or newer &mdash; only required to build from source.
+- macOS / Linux users can still launch the app to explore the UI, but installing and activating PHP versions from the library will fail until the V2 adapters land.
 
 ### Run from source
 
@@ -151,11 +159,13 @@ phlux/
 
 ## Supported platforms
 
-| OS | Status |
-| --- | --- |
-| Windows 10 / 11 (x64) | **Supported** &mdash; primary V1 target. |
-| macOS 13+ (Apple Silicon & Intel) | Groundwork present, activation via symlink + shell profile. Polishing planned for V2. |
-| Linux (AppImage) | Same groundwork. Ubuntu / Fedora polishing planned for V2. |
+| OS | Status | What works today | What is missing |
+| --- | --- | --- | --- |
+| **Windows 10 / 11 (x64)** | **Fully supported** | Discovery, install, activate, auto PATH fix, system PHP fallback. | Code signing (see [Roadmap](#roadmap)). |
+| **macOS 13+** (Apple Silicon &amp; Intel) | **Experimental** | Launches, discovery picks up Homebrew PHP, `php -v` readout, symlink-based shim + shell-profile hook. | `sources.json[darwin]` is empty; there is no Homebrew/tarball installer or PHP-FPM integration yet. Installing any version from the library will fail. Not signed/notarised. |
+| **Linux** (AppImage target) | **Experimental** | Launches, discovery scans `/usr/bin`, `/usr/local/bin`, `/opt/php`, symlink shim + shell-profile hook. | `sources.json[linux]` is empty; no distro-specific package-manager adapter (apt / dnf / pacman). Installing any version from the library will fail. |
+
+If you are comfortable using Phlux as a **viewer** for what is already on your Mac or Linux box (detected versions, active PHP readout) it works today. Full install / switch parity with Windows is a V2 goal.
 
 ## Configuration
 
@@ -171,14 +181,23 @@ You can edit `sources.json` to point at your own mirrors or pin specific patches
 
 ## Roadmap
 
-- [ ] Dark / light theme toggle
-- [ ] Composer install per PHP version
-- [ ] `php.ini` editor inside the app (enable extensions, set `memory_limit`, etc.)
-- [ ] Apache / nginx config hooks, so the web server picks up the active version too
-- [ ] macOS polish: native DMG, signed build, Homebrew cask
-- [ ] Linux polish: AppImage + deb/rpm + asdf plugin compatibility
-- [ ] Auto-update via [electron-updater](https://www.electron.build/auto-update)
-- [ ] Code signing via [Azure Trusted Signing](https://learn.microsoft.com/azure/trusted-signing/) so Windows SmartScreen / Smart App Control stop warning on fresh installs
+### V2 &mdash; cross-platform parity
+
+- [ ] **macOS installer** &mdash; Homebrew adapter (`brew install php@X.Y`, `brew unlink / link`) plus fallback to [liip/php-osx](https://php-osx.liip.ch/) tarballs.
+- [ ] **Linux installer** &mdash; distro-aware adapter (Ondřej Surý PPA on Ubuntu, Remi repo on Fedora) with an [asdf-php](https://github.com/asdf-community/asdf-php) fallback.
+- [ ] `.tar.gz` / tarball extraction path alongside the existing ZIP handler.
+- [ ] PHP-FPM integration (`brew services restart php@X.Y`, `systemctl restart php8.3-fpm`) so Apache / nginx setups pick up the switch automatically.
+- [ ] Signed & notarised macOS DMG; signed Linux AppImage where the format allows.
+
+### V3 &mdash; polish and distribution
+
+- [ ] Dark / light theme toggle.
+- [ ] Composer install per PHP version.
+- [ ] `php.ini` editor inside the app (enable extensions, set `memory_limit`, etc.).
+- [ ] Apache / nginx config hooks on Windows too.
+- [ ] Auto-update via [electron-updater](https://www.electron.build/auto-update).
+- [ ] Code signing via [Azure Trusted Signing](https://learn.microsoft.com/azure/trusted-signing/) so Windows SmartScreen / Smart App Control stop warning on fresh installs.
+- [ ] Microsoft Store + Homebrew Cask + Winget manifests.
 
 ## Contributing
 
