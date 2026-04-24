@@ -1,59 +1,211 @@
+<div align="center">
+
 # Phlux
 
-One-click PHP version switcher. Download, install and activate any PHP version from a clean desktop UI — no more editing `PATH` by hand.
+**One-click PHP version switcher for Windows, macOS and Linux.**
 
-> Status: **V1 (Windows, CLI only).** macOS & Linux and Apache/XAMPP integration are planned.
+Download, install and activate any PHP version from a clean desktop UI &mdash; no more editing `PATH` by hand, no `UAC` hunting in `sysdm.cpl`, no broken XAMPP setups.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)](#supported-platforms)
+[![Electron](https://img.shields.io/badge/Electron-41-47848F.svg?logo=electron&logoColor=white)](https://www.electronjs.org/)
+[![Node](https://img.shields.io/badge/Node-20%2B-339933.svg?logo=node.js&logoColor=white)](https://nodejs.org/)
+
+[Features](#features) &nbsp;&bull;&nbsp; [Quick start](#quick-start) &nbsp;&bull;&nbsp; [How it works](#how-it-works) &nbsp;&bull;&nbsp; [Tech stack](#tech-stack) &nbsp;&bull;&nbsp; [Roadmap](#roadmap)
+
+</div>
+
+---
+
+## Why Phlux
+
+Juggling PHP versions is a recurring pain for developers who maintain legacy codebases alongside cutting-edge projects. Existing solutions each have friction:
+
+- **XAMPP / WAMP** ship with a single PHP and expect you to reinstall for each version.
+- **Laragon** bundles many versions but locks you into its ecosystem.
+- **Manual installs** mean downloading ZIPs, extracting them, editing `php.ini`, and fighting the Windows `PATH` dialog every time.
+- **Command-line managers** like `phpenv` and `phpbrew` are great on Unix but hostile on Windows.
+
+Phlux treats PHP version management as a first-class desktop experience. One list, one click, versions installed side-by-side under your home directory, and a shim layer that makes `php -v` report whichever version you last activated &mdash; in every fresh terminal, system-wide.
 
 ## Features
 
-- Detects existing PHP installations on your system (XAMPP, Laragon, manual, Homebrew, apt)
-- Downloads official PHP releases from a configurable source list
-- Installs each version into an isolated folder under your user data directory
-- Switches the active CLI version with a single click using a shim on `PATH`
-- Persists your library across sessions
+- **System discovery** &mdash; scans for existing PHP installations from XAMPP, Laragon, WAMP, Homebrew, apt and common manual locations, then surfaces them as a read-only reference list.
+- **One-click install** &mdash; pick a version from the library, click *Install*, watch the progress. Phlux downloads the official Windows build, extracts it to an isolated per-version folder, enables the usual extensions (`curl`, `mbstring`, `openssl`, `pdo_mysql`, `intl`, `zip`, `gd`, `fileinfo`, `sqlite3`, `pdo_sqlite`) and registers it.
+- **Self-healing download URLs** &mdash; if the configured ZIP was rotated to the archives by a newer patch, Phlux transparently resolves the working URL via `windows.php.net`'s `releases.json` or the `/archives/` index.
+- **Use existing XAMPP / Laragon** &mdash; no need to re-download PHP you already have. Phlux links the detected system binary into the active slot with one click.
+- **Auto-elevated PATH fix** &mdash; the first activation pins Phlux's shim folder to the front of the **machine** `PATH` via a single UAC prompt, so the `php` command resolves to Phlux in every terminal, independent of user profile order. Subsequent activations need no elevation.
+- **Instant switch, no reboot** &mdash; activating a different version rewrites a single text file that the shim reads. Every new terminal picks it up immediately; Apache/nginx setups are untouched.
+- **Graceful fallback** &mdash; uninstall the active Phlux version and the shim is removed automatically, so the OS falls back to your original system PHP (XAMPP, Homebrew, etc.).
+- **Cross-platform groundwork** &mdash; the shim model uses `.cmd/.bat` on Windows and symlinks with shell-profile hooks on macOS / Linux. The same storage and discovery logic works on all three.
 
-## Requirements
+## Screenshot
 
-- Node.js 20+ (only needed to build from source)
-- Windows 10/11 for V1
+![Phlux main window](assets/screenshot.png)
 
-## Getting started
+<sub>(If the image does not render, a screenshot will be added once the first release is cut.)</sub>
+
+## Quick start
+
+### Prerequisites
+
+- **Windows 10 / 11** for the supported V1 build (macOS and Linux are in progress).
+- **Node.js 20 LTS** or newer &mdash; only required to build from source.
+
+### Run from source
 
 ```bash
+git clone https://github.com/<your-handle>/phlux.git
+cd phlux
 npm install
 npm run dev
 ```
 
-To produce an installer:
+`npm run dev` launches the app with `electronmon`, auto-reloading on file changes. DevTools opens in a detached window for inspection.
+
+### Produce a Windows installer
 
 ```bash
 npm run build:win
 ```
 
-The installer lands in `dist/`.
+The signed installer lands in `dist/`.
 
-## How switching works
+## How it works
 
-Phlux never touches your system-wide PHP installations. On first run it:
+```
+┌──────────────────────────────────────────────────────────────┐
+│                          Phlux UI                            │
+│  (Electron renderer, vanilla HTML/CSS/JS, contextIsolation)  │
+└─────────────┬──────────────────────────────────┬─────────────┘
+              │ IPC (preload.js)                 │
+              ▼                                  ▼
+┌──────────────────────────┐       ┌─────────────────────────────┐
+│  Main process            │       │  Filesystem                 │
+│                          │       │                             │
+│  discovery.js → scans    │       │  %APPDATA%\Phlux\           │
+│  downloader.js → fetch   │       │    ├── versions\8.x\...     │
+│  resolver.js → URL        │       │    ├── bin\php.cmd         │
+│  installer.js → extract  │       │    ├── active\target.txt    │
+│  switcher.js → shim+PATH │       │    ├── config.json          │
+│  ipc.js → bridge         │       │    └── sources.json         │
+│  config.js → persistence │       │                             │
+└──────────┬───────────────┘       └─────────────────────────────┘
+           │ spawn / PowerShell
+           ▼
+  ┌────────────────────┐
+  │  System PHP probes │   where.exe / php -v
+  └────────────────────┘
+```
 
-1. Creates a shim directory at `%APPDATA%\Phlux\bin` containing a `php.exe` proxy.
-2. Adds that directory to your **user** `PATH` (once).
-3. Points the shim at whichever version you activate.
+### The shim trick
 
-Opening a **new** terminal is enough to see the new version — no reboot, no admin rights.
+Phlux never edits the files of your existing XAMPP or Laragon installation. On first activation it:
 
-## Project layout
+1. Creates `%APPDATA%\Phlux\bin\php.cmd` (and `php.bat`), which reads `%APPDATA%\Phlux\active\target.txt` and executes whatever `php.exe` that file points to.
+2. Pins that `bin` folder to the front of the **user** `PATH`.
+3. If another PHP (like XAMPP) lives in the **machine** `PATH`, raises a UAC prompt once to pin the same folder to the front of the machine `PATH`. This is the only elevated step Phlux ever performs and it only happens the first time.
+
+Switching versions is just overwriting `target.txt`. No process restart, no registry editing, no `refreshenv`. Opening a new terminal is enough.
+
+## Tech stack
+
+| Layer | Choice | Why |
+| --- | --- | --- |
+| **Desktop shell** | [Electron 41](https://www.electronjs.org/) | Cross-platform, mature, tight integration with Node APIs needed for filesystem, child processes and PATH manipulation. |
+| **UI** | Vanilla HTML + CSS + JavaScript | Two or three screens, zero bundler, zero framework overhead. Fast iteration, small binary. |
+| **Main process** | Node.js 20 (bundled with Electron) | `child_process`, `fs/promises`, `https`, `path`, all first-party. |
+| **Package & install** | [electron-builder 26](https://www.electron.build/) | NSIS installer on Windows, DMG on macOS, AppImage on Linux &mdash; declarative config. |
+| **Dev loop** | [electronmon 2](https://github.com/catdad/electronmon) | Auto-restart on file changes without custom watchers. |
+| **Archive extraction** | [adm-zip 0.5](https://github.com/cthackers/adm-zip) | Pure JS, no native dependencies, handles windows.php.net ZIPs reliably. |
+| **Logging** | [electron-log 5](https://github.com/megahertz/electron-log) | Unified main/renderer logs that end up on disk for bug reports. |
+| **Persistence** | `fs`-backed JSON (`config.json`, `sources.json`) | Small surface, explicit schema, trivially migratable. Replaces `electron-store` (which is ESM-only on v11). |
+| **PATH / elevation** | PowerShell via `child_process.execFile` | `[Environment]::SetEnvironmentVariable('Path', ..., 'User' | 'Machine')` plus `Start-Process -Verb RunAs` for the one-time UAC prompt. |
+| **Download URL resolution** | `windows.php.net` `releases.json` + `/archives/` HTML index | Self-heals when PHP patch rotations move the default URL. |
+
+### Project layout
 
 ```
 phlux/
 ├── src/
-│   ├── main/          Electron main process (Node APIs)
-│   ├── preload.js     Secure IPC bridge
-│   └── renderer/      UI (HTML/CSS/JS)
-├── assets/            App icons
-└── build/             electron-builder resources
+│   ├── main/
+│   │   ├── index.js        ← Electron main entry
+│   │   ├── paths.js        ← userData path helpers
+│   │   ├── config.js       ← JSON config + sources
+│   │   ├── discovery.js    ← System PHP scanner
+│   │   ├── downloader.js   ← Streaming HTTP(S) download
+│   │   ├── resolver.js     ← URL resolution (releases.json + archives)
+│   │   ├── installer.js    ← Unzip, php.ini tweaks, linkExisting
+│   │   ├── switcher.js     ← Shim, user PATH, machine PATH elevation
+│   │   └── ipc.js          ← ipcMain handlers
+│   ├── preload.js          ← contextBridge (window.api)
+│   └── renderer/
+│       ├── index.html
+│       ├── styles.css
+│       └── app.js
+├── assets/                  ← Icons (icon.ico / icon.icns / icon.png)
+├── build/                   ← electron-builder resources
+├── package.json
+└── README.md
 ```
+
+## Supported platforms
+
+| OS | Status |
+| --- | --- |
+| Windows 10 / 11 (x64) | **Supported** &mdash; primary V1 target. |
+| macOS 13+ (Apple Silicon & Intel) | Groundwork present, activation via symlink + shell profile. Polishing planned for V2. |
+| Linux (AppImage) | Same groundwork. Ubuntu / Fedora polishing planned for V2. |
+
+## Configuration
+
+Phlux stores all user data under `%APPDATA%\Phlux\` (Windows), `~/Library/Application Support/Phlux/` (macOS), or `~/.config/Phlux/` (Linux).
+
+- `config.json` &mdash; installed versions and currently-active version.
+- `sources.json` &mdash; per-platform download URLs per `major.minor`. New versions added in future Phlux releases are merged into your existing file automatically without overwriting your customisations.
+- `versions/` &mdash; one folder per installed version, each a self-contained PHP distribution.
+- `bin/` &mdash; the shim folder that lives on your `PATH`.
+- `downloads/` &mdash; cached ZIPs (deleted after successful installs).
+
+You can edit `sources.json` to point at your own mirrors or pin specific patches.
+
+## Roadmap
+
+- [ ] Dark / light theme toggle
+- [ ] Composer install per PHP version
+- [ ] `php.ini` editor inside the app (enable extensions, set `memory_limit`, etc.)
+- [ ] Apache / nginx config hooks, so the web server picks up the active version too
+- [ ] macOS polish: native DMG, signed build, Homebrew cask
+- [ ] Linux polish: AppImage + deb/rpm + asdf plugin compatibility
+- [ ] Auto-update via [electron-updater](https://www.electron.build/auto-update)
+- [ ] Code signing via [Azure Trusted Signing](https://learn.microsoft.com/azure/trusted-signing/) so Windows SmartScreen / Smart App Control stop warning on fresh installs
+
+## Contributing
+
+Pull requests are welcome. For non-trivial changes, open an issue first to discuss the direction.
+
+```bash
+git clone https://github.com/<your-handle>/phlux.git
+cd phlux
+npm install
+npm run dev
+```
+
+Code style is intentionally minimal: no linter hooks, no formatter, no test framework yet. Keep modules small and focused, prefer Node built-ins over dependencies, and avoid introducing TypeScript without consensus.
+
+## Troubleshooting
+
+**The `php -v` command still reports my old version after activating.**
+Open a **new** terminal. Windows resolves `PATH` at shell start; the one you had open before the first activation still holds the old value.
+
+**SmartScreen or Smart App Control blocks part of the install.**
+Until a signed release is shipped, exclude `%APPDATA%\Phlux` from Windows Security &rarr; Virus &amp; threat protection &rarr; Exclusions. This is a one-time step for the developer build.
+
+**UAC prompt keeps appearing on every activation.**
+It should only appear once, the first time Phlux needs to edit the machine `PATH`. If it keeps firing, check that your machine `PATH` actually contains `%APPDATA%\Phlux\bin` at position 0 &mdash; an aggressive antivirus may be reverting the change.
 
 ## License
 
-MIT © ajans.io
+Released under the [MIT License](LICENSE).
+
+Copyright &copy; ajans.io
