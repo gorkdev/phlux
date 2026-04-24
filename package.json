@@ -11,7 +11,8 @@
     "build": "electron-builder",
     "build:win": "electron-builder --win",
     "build:mac": "electron-builder --mac",
-    "build:linux": "electron-builder --linux"
+    "build:linux": "electron-builder --linux",
+    "icons": "electron-icon-builder --input=./assets/source.png --output=./assets --flatten"
   },
   "dependencies": {
     "adm-zip": "^0.5.17",
@@ -20,6 +21,7 @@
   "devDependencies": {
     "electron": "^41.3.0",
     "electron-builder": "^26.8.1",
+    "electron-icon-builder": "^2.0.1",
     "electronmon": "^2.0.4"
   },
   "build": {
@@ -36,16 +38,16 @@
     ],
     "win": {
       "target": "nsis",
-      "icon": "assets/icon.ico"
+      "icon": "assets/icons/icon.ico"
     },
     "mac": {
       "target": "dmg",
-      "icon": "assets/icon.icns",
+      "icon": "assets/icons/icon.icns",
       "category": "public.app-category.developer-tools"
     },
     "linux": {
       "target": "AppImage",
-      "icon": "assets/icon.png",
+      "icon": "assets/icons",
       "category": "Development"
     }
   }

@@ -8,6 +8,13 @@ log.info('Phlux starting', { version: app.getVersion(), platform: process.platfo
 
 let mainWindow = null;
 
+function resolveIconPath() {
+  const iconsDir = path.join(__dirname, '..', '..', 'assets', 'icons');
+  if (process.platform === 'win32') return path.join(iconsDir, 'icon.ico');
+  if (process.platform === 'darwin') return path.join(iconsDir, 'icon.icns');
+  return path.join(iconsDir, '512x512.png');
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 980,
@@ -16,6 +23,7 @@ function createWindow() {
     minHeight: 560,
     backgroundColor: '#0f1115',
     title: 'Phlux',
+    icon: resolveIconPath(),
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, '..', 'preload.js'),
