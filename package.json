@@ -42,7 +42,7 @@
     "electron-log": "^5.4.3"
   },
   "devDependencies": {
-    "electron": "^41.3.0",
+    "electron": "^42.0.0",
     "electron-builder": "^26.8.1",
     "electron-icon-builder": "^2.0.1",
     "electronmon": "^2.0.4"
