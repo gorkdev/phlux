@@ -1,0 +1,37 @@
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Europe/Istanbul
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      electron:
+        patterns:
+          - electron
+          - electron-*
+          - electronmon
+      dev-dependencies:
+        dependency-type: development
+        exclude-patterns:
+          - electron
+          - electron-*
+          - electronmon
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    labels:
+      - ci
+    commit-message:
+      prefix: ci

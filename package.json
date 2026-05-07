@@ -2,8 +2,31 @@
   "name": "phlux",
   "version": "0.1.0",
   "description": "One-click PHP version switcher for Windows, macOS and Linux.",
-  "author": "ajans.io",
+  "author": "Gorkem <developer@ajans.io>",
   "license": "MIT",
+  "homepage": "https://github.com/gorkdev/phlux#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gorkdev/phlux.git"
+  },
+  "bugs": {
+    "url": "https://github.com/gorkdev/phlux/issues"
+  },
+  "keywords": [
+    "php",
+    "version-manager",
+    "version-switcher",
+    "electron",
+    "windows",
+    "developer-tools",
+    "xampp",
+    "laragon",
+    "phpenv",
+    "desktop-app"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "main": "src/main/index.js",
   "scripts": {
     "start": "electron .",

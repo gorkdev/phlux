@@ -7,6 +7,8 @@ macOS and Linux support is scaffolded but not production-ready yet.
 
 Download, install and activate any PHP version from a clean desktop UI &mdash; no more editing `PATH` by hand, no UAC hunting in `sysdm.cpl`, no broken XAMPP setups.
 
+[![Build](https://github.com/gorkdev/phlux/actions/workflows/build.yml/badge.svg)](https://github.com/gorkdev/phlux/actions/workflows/build.yml)
+[![Release](https://img.shields.io/github/v/release/gorkdev/phlux?include_prereleases&sort=semver&display_name=tag)](https://github.com/gorkdev/phlux/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows-0078D6.svg?logo=windows&logoColor=white)](#supported-platforms)
 [![macOS / Linux](https://img.shields.io/badge/macOS%20%7C%20Linux-experimental-orange.svg)](#supported-platforms)
@@ -26,11 +28,11 @@ Download, install and activate any PHP version from a clean desktop UI &mdash; n
 
 ## Download
 
-Grab the latest Windows installer from the [Releases page](https://github.com/<your-handle>/phlux/releases/latest):
+Grab the latest Windows installer from the [Releases page](https://github.com/gorkdev/phlux/releases/latest):
 
 | Platform | File | Direct link |
 | --- | --- | --- |
-| **Windows (x64)** | `Phlux-Setup-<version>.exe` | [Download latest](https://github.com/<your-handle>/phlux/releases/latest/download/Phlux-Setup.exe) |
+| **Windows (x64)** | `Phlux Setup <version>.exe` | [Releases page](https://github.com/gorkdev/phlux/releases/latest) |
 | macOS | _planned for V2_ | &mdash; |
 | Linux | _planned for V2_ | &mdash; |
 
@@ -60,9 +62,7 @@ Phlux treats PHP version management as a first-class desktop experience. One lis
 
 ## Screenshot
 
-![Phlux main window](assets/screenshot.png)
-
-<sub>(If the image does not render, a screenshot will be added once the first release is cut.)</sub>
+![Phlux main window](assets/Screenshot.png)
 
 ## Quick start
 
@@ -75,7 +75,7 @@ Phlux treats PHP version management as a first-class desktop experience. One lis
 ### Run from source
 
 ```bash
-git clone https://github.com/<your-handle>/phlux.git
+git clone https://github.com/gorkdev/phlux.git
 cd phlux
 npm install
 npm run dev
@@ -253,7 +253,7 @@ You can edit `sources.json` to point at your own mirrors or pin specific patches
 Pull requests are welcome. For non-trivial changes, open an issue first to discuss the direction.
 
 ```bash
-git clone https://github.com/<your-handle>/phlux.git
+git clone https://github.com/gorkdev/phlux.git
 cd phlux
 npm install
 npm run dev
@@ -276,4 +276,4 @@ It should only appear once, the first time Phlux needs to edit the machine `PATH
 
 Released under the [MIT License](LICENSE).
 
-Copyright &copy; ajans.io
+Copyright &copy; 2026 Gorkem

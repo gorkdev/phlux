@@ -1,0 +1,38 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [0.1.0] - 2026-05-07
+
+Initial public preview. Windows is fully supported; macOS and Linux launch but cannot install PHP versions yet.
+
+### Added
+
+- Electron-based desktop UI for managing PHP versions.
+- System discovery for existing PHP installations (XAMPP, Laragon, WAMP, Homebrew, apt, common manual locations).
+- One-click install of PHP versions from `windows.php.net`, with extraction into per-version isolated folders.
+- Default extension activation on install: `curl`, `mbstring`, `openssl`, `pdo_mysql`, `intl`, `zip`, `gd`, `fileinfo`, `sqlite3`, `pdo_sqlite`.
+- Self-healing download URL resolver that falls back to `releases.json` and the `/archives/` index when a configured ZIP is rotated.
+- Link-existing flow for PHP installations already on the machine (XAMPP / Laragon / Homebrew).
+- Auto-elevated machine `PATH` fix on first activation, via a single UAC PowerShell prompt.
+- Shim-based version switching: a single text file (`active/target.txt`) decides which PHP `php -v` resolves to. No reboot or `refreshenv` required.
+- Graceful fallback to system PHP when the active Phlux version is uninstalled.
+- Cross-platform groundwork: symlink + shell-profile shim model on macOS / Linux (sources catalogue not yet populated).
+- Persistent JSON configuration (`config.json`, `sources.json`) under the platform user-data directory.
+- Unified main + renderer logging via `electron-log`.
+- App icon and `BrowserWindow` icon resolver (`assets/icons/`).
+- electron-builder packaging for NSIS (Windows), DMG (macOS) and AppImage (Linux).
+
+### Known limitations
+
+- macOS and Linux installers cannot fetch PHP yet (`sources.json` ships empty for those platforms).
+- Windows installer is unsigned; SmartScreen may warn on first run.
+- No automatic update mechanism yet (planned for V3).
+
+[Unreleased]: https://github.com/gorkdev/phlux/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/gorkdev/phlux/releases/tag/v0.1.0
