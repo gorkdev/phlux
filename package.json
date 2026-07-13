@@ -38,7 +38,7 @@
     "icons": "electron-icon-builder --input=./assets/source.png --output=./assets --flatten"
   },
   "dependencies": {
-    "adm-zip": "^0.5.17",
+    "adm-zip": "^0.6.0",
     "electron-log": "^5.4.3"
   },
   "devDependencies": {
