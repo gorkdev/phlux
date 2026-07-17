@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-17
+
 ### Added
 
 - PHP 7.1 and 7.0 in the default Windows source catalogue. Both are VC14 x64 builds and need the Visual C++ 2015–2022 redistributable, which is already present on most machines.
@@ -46,5 +48,6 @@ Initial public preview. Windows is fully supported; macOS and Linux launch but c
 - Windows installer is unsigned; SmartScreen may warn on first run.
 - No automatic update mechanism yet (planned for V3).
 
-[Unreleased]: https://github.com/gorkdev/phlux/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/gorkdev/phlux/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/gorkdev/phlux/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/gorkdev/phlux/releases/tag/v0.1.0
