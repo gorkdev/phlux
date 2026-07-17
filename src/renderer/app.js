@@ -248,6 +248,11 @@ async function useSystem(version, systemMatch) {
     const act = await phluxApi.activate(version);
     if (!act.ok) {
       setStatus(`Activation failed: ${act.error}`);
+    } else if (act.result?.shadowedBy) {
+      setStatus(
+        `PHP ${version} is selected, but ${act.result.shadowedBy} still comes first on the ` +
+        `machine PATH. Activate again and accept the administrator prompt to fix this.`
+      );
     } else {
       setStatus(`PHP ${version} is active via ${systemMatch.source}. Open a new terminal.`);
     }
@@ -265,6 +270,12 @@ async function activateVersion(version) {
     const res = await phluxApi.activate(version);
     if (!res.ok) {
       setStatus(`Activation failed: ${res.error}`);
+    } else if (res.result?.shadowedBy) {
+      setStatus(
+        `PHP ${version} is selected, but ${res.result.shadowedBy} still comes first on the ` +
+        `machine PATH, so "php" will keep resolving to it. Activate again and accept the ` +
+        `administrator prompt to fix this.`
+      );
     } else {
       setStatus(`PHP ${version} is now active. Open a new terminal to use it.`);
     }

@@ -177,15 +177,23 @@ async function activate(version) {
 
   await addToUserPath();
 
+  // Another PHP earlier on the machine PATH would win over the shim, so the
+  // switch only takes effect if the user accepts the elevation prompt.
+  let shadowedBy = null;
   if (await needsMachineElevation()) {
     log.info('Auto-elevating to pin shim on machine PATH');
-    await elevatePinToMachinePath();
+    const elevated = await elevatePinToMachinePath();
+    if (!elevated.ok) {
+      const { machineConflicts } = await detectConflicts();
+      shadowedBy = machineConflicts[0] || 'another PHP on the machine PATH';
+      log.warn('Machine PATH not updated; shim stays shadowed by', shadowedBy);
+    }
   }
 
   cfg.activeVersion = version;
   await saveConfig(cfg);
-  log.info('Activated PHP', version);
-  return { version, path: entry.path, binDir: paths.binDir() };
+  log.info('Activated PHP', version, shadowedBy ? `(shadowed by ${shadowedBy})` : '');
+  return { version, path: entry.path, binDir: paths.binDir(), shadowedBy };
 }
 
 async function verifyActive() {
