@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- PHP 7.1 and 7.0 in the default Windows source catalogue. Both are VC14 x64 builds and need the Visual C++ 2015–2022 redistributable, which is already present on most machines.
+- Unit tests (`npm test`) for `php.ini` generation and Windows shim generation.
+
+### Fixed
+
+- Extensions were not enabled at all when installing PHP 7.1 or older. PHP 7.2 renamed the `php.ini-development` entries from `;extension=php_curl.dll` to `;extension=curl`, and only the newer spelling was recognised. Both are now handled, including `gd`, which older builds ship as `php_gd2.dll`. `zip` is compiled into builds up to 7.1 and correctly needs no entry.
+- The shim broke on any machine whose username contains non-ASCII characters (for example `C:\Users\Görkem`). `cmd.exe` decodes `.cmd` files using the console OEM codepage rather than UTF-8, so the baked-in path was mis-decoded at run time. The shim now derives its root from `%~dp0` and stores managed versions as a root-relative, ASCII-only path.
+- Activation reported success when the UAC prompt was cancelled, leaving `php` resolving to the PHP that shadows the shim on the machine `PATH`. The UI now names the shadowing installation and explains how to fix it.
+- `PHLUX_PHP` leaked into the calling shell's environment; the shim now uses `setlocal`.
+
 ## [0.1.0] - 2026-05-07
 
 Initial public preview. Windows is fully supported; macOS and Linux launch but cannot install PHP versions yet.

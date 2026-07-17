@@ -20,6 +20,8 @@ const DEFAULT_SOURCES = {
     '7.4': 'https://windows.php.net/downloads/releases/archives/php-7.4.33-nts-Win32-vc15-x64.zip',
     '7.3': 'https://windows.php.net/downloads/releases/archives/php-7.3.33-nts-Win32-VC15-x64.zip',
     '7.2': 'https://windows.php.net/downloads/releases/archives/php-7.2.34-nts-Win32-VC15-x64.zip',
+    '7.1': 'https://windows.php.net/downloads/releases/archives/php-7.1.33-nts-Win32-VC14-x64.zip',
+    '7.0': 'https://windows.php.net/downloads/releases/archives/php-7.0.33-nts-Win32-VC14-x64.zip',
   },
   darwin: {},
   linux: {},
