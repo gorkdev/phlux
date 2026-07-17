@@ -29,6 +29,7 @@
   },
   "main": "src/main/index.js",
   "scripts": {
+    "test": "node --test",
     "start": "electron .",
     "dev": "electronmon .",
     "build": "electron-builder",

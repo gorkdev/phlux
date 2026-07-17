@@ -8,6 +8,7 @@ const { download } = require('./downloader');
 const { loadConfig, saveConfig, loadSources } = require('./config');
 const { readVersion } = require('./discovery');
 const { resolveDownloadUrl } = require('./resolver');
+const { buildPhpIni } = require('./phpini');
 const { removeShim } = require('./switcher');
 
 function sendProgress(win, payload) {
@@ -28,26 +29,8 @@ async function ensurePhpIni(versionFolder) {
   if (fs.existsSync(out)) return;
   if (!fs.existsSync(dev)) return;
 
-  let ini = await fsp.readFile(dev, 'utf8');
-  const enable = [
-    'curl',
-    'fileinfo',
-    'gd',
-    'intl',
-    'mbstring',
-    'openssl',
-    'pdo_mysql',
-    'pdo_sqlite',
-    'sqlite3',
-    'zip',
-  ];
-  for (const ext of enable) {
-    const re = new RegExp(`^;\\s*extension\\s*=\\s*${ext}\\b`, 'm');
-    ini = ini.replace(re, `extension=${ext}`);
-  }
-  const extDir = path.join(versionFolder, 'ext').replace(/\\/g, '/');
-  ini = ini.replace(/^;\s*extension_dir\s*=\s*"ext"/m, `extension_dir = "${extDir}"`);
-  await fsp.writeFile(out, ini, 'utf8');
+  const devIni = await fsp.readFile(dev, 'utf8');
+  await fsp.writeFile(out, buildPhpIni(devIni, path.join(versionFolder, 'ext')), 'utf8');
 }
 
 async function installVersion(win, version) {
