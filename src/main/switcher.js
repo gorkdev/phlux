@@ -5,25 +5,25 @@ const { execFile } = require('child_process');
 const { promisify } = require('util');
 const log = require('electron-log/main');
 const paths = require('./paths');
+const { shimTargetRef, buildWindowsShim, resolveTargetRef } = require('./shim');
 const { loadConfig, saveConfig } = require('./config');
 
 const execFileP = promisify(execFile);
 
 async function writeWindowsShim(activePhpExe) {
+  const { ref, absolute } = shimTargetRef(paths.userData(), activePhpExe);
+
   await fsp.mkdir(paths.binDir(), { recursive: true });
   const activeDir = path.join(paths.userData(), 'active');
   await fsp.rm(activeDir, { recursive: true, force: true });
   await fsp.mkdir(activeDir, { recursive: true });
 
-  const pointer = path.join(activeDir, 'target.txt');
-  await fsp.writeFile(pointer, activePhpExe, 'utf8');
+  await fsp.writeFile(path.join(activeDir, 'target.txt'), ref, 'ascii');
 
-  const shimCmd = path.join(paths.binDir(), 'php.cmd');
-  const cmd = `@echo off\r\nfor /f "usebackq delims=" %%A in ("${pointer}") do set PHLUX_PHP=%%A\r\n"%PHLUX_PHP%" %*\r\n`;
-  await fsp.writeFile(shimCmd, cmd, 'utf8');
-
-  const shimBat = path.join(paths.binDir(), 'php.bat');
-  await fsp.writeFile(shimBat, cmd, 'utf8');
+  const cmd = buildWindowsShim(absolute);
+  for (const name of ['php.cmd', 'php.bat']) {
+    await fsp.writeFile(path.join(paths.binDir(), name), cmd, 'ascii');
+  }
 }
 
 async function writeUnixShim(activePhpExe) {
@@ -196,12 +196,17 @@ async function activate(version) {
   return { version, path: entry.path, binDir: paths.binDir(), shadowedBy };
 }
 
+async function readShimTarget() {
+  const pointer = path.join(paths.userData(), 'active', 'target.txt');
+  if (!fs.existsSync(pointer)) return null;
+  return resolveTargetRef(paths.userData(), await fsp.readFile(pointer, 'ascii'));
+}
+
 async function verifyActive() {
   if (process.platform === 'win32') {
-    const pointer = path.join(paths.userData(), 'active', 'target.txt');
-    if (!fs.existsSync(pointer)) return null;
     try {
-      const target = (await fsp.readFile(pointer, 'utf8')).trim();
+      const target = await readShimTarget();
+      if (!target) return null;
       const { stdout } = await execFileP(target, ['-v'], { timeout: 5000 });
       const match = stdout.match(/PHP\s+([\d.]+)/);
       return match ? match[1] : null;
