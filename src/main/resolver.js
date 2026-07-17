@@ -3,7 +3,8 @@ const log = require('electron-log/main');
 
 const RELEASES_URL = 'https://windows.php.net/downloads/releases/releases.json';
 const ARCHIVES_INDEX = 'https://windows.php.net/downloads/releases/archives/';
-const BASE = 'https://windows.php.net';
+// Asset paths in releases.json are bare filenames relative to the releases directory.
+const RELEASES_BASE = 'https://windows.php.net/downloads/releases/';
 
 function fetchText(url, timeoutMs = 15_000) {
   return new Promise((resolve, reject) => {
@@ -42,15 +43,24 @@ async function headOk(url) {
   });
 }
 
+// A releases.json version entry nests its assets one level deeper than the build
+// flavour: { "8.4": { version, "nts-vs17-x64": { zip: { path, sha256 } }, ... } }.
+// The compiler tag moves with each PHP release line (vc14 -> vc15 -> vs16 -> vs17),
+// so the flavour is matched by shape rather than by name.
+function pickReleaseAsset(entry) {
+  const flavour = Object.keys(entry).find((k) => /^nts-.+-x64$/.test(k));
+  const zip = flavour && entry[flavour]?.zip;
+  return zip?.path ? { path: zip.path, sha256: zip.sha256 || null } : null;
+}
+
 async function resolveFromReleases(majorMinor) {
   try {
-    const body = await fetchText(RELEASES_URL);
-    const data = JSON.parse(body);
+    const data = JSON.parse(await fetchText(RELEASES_URL));
     const entry = data[majorMinor];
     if (!entry) return null;
-    const asset = entry['nts-zip'] || entry['zip'];
-    if (!asset?.path) return null;
-    return new URL(asset.path, BASE).toString();
+    const asset = pickReleaseAsset(entry);
+    if (!asset) return null;
+    return { url: new URL(asset.path, RELEASES_BASE).toString(), sha256: asset.sha256 };
   } catch (err) {
     log.warn('releases.json lookup failed', err.message);
     return null;
@@ -76,17 +86,20 @@ async function resolveFromArchives(majorMinor) {
   }
 }
 
+// releases.json is preferred over the configured URL because it is the only source
+// that carries a checksum, and because php.net rotates patch releases out from under
+// the pinned URLs in sources.json.
 async function resolveDownloadUrl(majorMinor, configuredUrl) {
-  if (configuredUrl && (await headOk(configuredUrl))) {
-    return { url: configuredUrl, via: 'configured' };
-  }
   const released = await resolveFromReleases(majorMinor);
-  if (released && (await headOk(released))) {
-    return { url: released, via: 'releases.json' };
+  if (released && (await headOk(released.url))) {
+    return { url: released.url, sha256: released.sha256, via: 'releases.json' };
+  }
+  if (configuredUrl && (await headOk(configuredUrl))) {
+    return { url: configuredUrl, sha256: null, via: 'configured' };
   }
   const archived = await resolveFromArchives(majorMinor);
   if (archived && (await headOk(archived))) {
-    return { url: archived, via: 'archives' };
+    return { url: archived, sha256: null, via: 'archives' };
   }
   throw new Error(
     `Could not resolve a download URL for PHP ${majorMinor}. ` +

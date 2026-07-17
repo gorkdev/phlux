@@ -39,7 +39,7 @@ async function installVersion(win, version) {
   const configuredUrl = platformSources[version];
 
   sendProgress(win, { version, stage: 'resolve', percent: 0 });
-  const { url, via } = await resolveDownloadUrl(version, configuredUrl);
+  const { url, via, sha256 } = await resolveDownloadUrl(version, configuredUrl);
   log.info(`Resolved PHP ${version} via ${via}: ${url}`);
 
   sendProgress(win, { version, stage: 'download', percent: 0 });
@@ -47,7 +47,7 @@ async function installVersion(win, version) {
   const zipFile = path.join(paths.downloadsDir(), `php-${version}.zip`);
   await download(url, zipFile, (p) => {
     sendProgress(win, { version, stage: 'download', percent: p.percent, received: p.received, total: p.total });
-  });
+  }, sha256);
 
   sendProgress(win, { version, stage: 'extract', percent: 100 });
 
